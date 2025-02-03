@@ -1,4 +1,5 @@
 const RestaurantOwner = require('../models/RestaurantOwner');
+const User = require('../models/User');
 
 // Get restaurant details
 exports.getRestaurantDetails = async (req, res) => {
@@ -6,11 +7,11 @@ exports.getRestaurantDetails = async (req, res) => {
     const { restaurantId } = req.user;
     const restaurant = await RestaurantOwner.findById(restaurantId);
 
-    if(!restaurant) return res.status(404).json({ message: "Restaurant details not found" });
+    if (!restaurant) return res.status(404).json({ message: "Restaurant details not found" });
 
     return res.status(200).json({ restaurant: restaurant });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching restaurant details", error});
+    res.status(500).json({ message: "Error fetching restaurant details", error });
   }
 };
 
@@ -44,7 +45,6 @@ exports.updateRestaurantDetails = async (req, res) => {
       restaurant,
     });
   } catch (error) {
-    console.error("Error updating restaurant details:", error);
     res.status(500).json({ message: "Failed to update restaurant details", error: error.message });
   }
 };
@@ -63,7 +63,6 @@ exports.addMenuItem = async (req, res) => {
 
     res.status(201).json({ message: 'Menu item added' });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Error adding menu item', error });
   }
 };
@@ -91,7 +90,6 @@ exports.updateMenuItem = async (req, res) => {
 
     res.status(200).json({ message: 'Menu item updated' });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Error updating menu item' });
   }
 };
@@ -121,7 +119,6 @@ exports.deleteMenuItem = async (req, res) => {
 
     res.status(200).json({ message: 'Menu item deleted' });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Error deleting menu item', error });
   }
 };
@@ -141,7 +138,6 @@ exports.getMenuItem = async (req, res) => {
     // Return the menu items
     res.status(200).json({ menuItems: restaurant.menuItems });
   } catch (error) {
-    console.error('Error fetching menu items:', error);
     res.status(500).json({ message: 'Failed to fetch menu items', error: error.message });
   }
 }
@@ -161,7 +157,6 @@ exports.getMenuItemById = async (req, res) => {
     // Return the menu items
     res.status(200).json({ menuItems: restaurant.menuItems });
   } catch (error) {
-    console.error('Error fetching menu items:', error);
     res.status(500).json({ message: 'Failed to fetch menu items', error: error.message });
   }
 }
@@ -190,7 +185,6 @@ exports.addStaffMember = async (req, res) => {
 
     res.status(201).json({ message: "Staff member added successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error adding staff member" });
   }
 };
@@ -205,7 +199,7 @@ exports.getStaffMember = async (req, res) => {
     }
 
     res.status(200).json({ staffDetails: restaurant.deliveryStaff });
-  } catch (error){
+  } catch (error) {
     res.status(500).json({ message: "Error fetching staff member" });
   }
 };
@@ -224,7 +218,6 @@ exports.getStaffCount = async (req, res) => {
     const staffCount = restaurant.deliveryStaff.length;
     res.status(200).json({ staffCount });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error retrieving staff count" });
   }
 };
@@ -251,7 +244,6 @@ exports.deleteStaffMember = async (req, res) => {
 
     res.status(200).json({ message: "Staff member deleted successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error deleting staff member" });
   }
 };
@@ -282,7 +274,6 @@ exports.editStaffMember = async (req, res) => {
     await restaurant.save();
     res.status(200).json({ message: "Staff member updated successfully", staff: staffMember });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error updating staff member" });
   }
 };
@@ -294,7 +285,6 @@ exports.addReservationDetails = async (req, res) => {
   const { restaurantId } = req.user;
 
   try {
-    console.log(req.body);
     const restaurant = await RestaurantOwner.findById(restaurantId);
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
@@ -306,8 +296,6 @@ exports.addReservationDetails = async (req, res) => {
     }
 
     dineInCapacity = dineInCapacity - noOfPersons;
-
-    console.log(dineInCapacity);
 
     const reservation = {
       guestName,
@@ -324,50 +312,96 @@ exports.addReservationDetails = async (req, res) => {
     await restaurant.save();
     res.status(201).json({ message: "Reservation added successfully", reservation });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error adding reservation" });
   }
 };
 
 exports.updateReservation = async (req, res) => {
-  try{
-    console.log('updation started');
+  try {
     const { restaurantId } = req.user;
     const { reservationId } = req.params;
     const { status } = req.body;
 
-    console.log(restaurantId, reservationId, status);
-
     const restaurant = await RestaurantOwner.findById(restaurantId);
-    console.log(restaurant);
-    if (!restaurant) return res.status(404).json({ message: "Restaurant owner not found"});
+    if (!restaurant) return res.status(404).json({ message: "Restaurant owner not found" });
 
     let dineInCapacity = restaurant.dineInCapacity;
-    console.log(dineInCapacity);
 
     const reservation = restaurant.reservation.find(booking => booking._id.toString() === reservationId);
-    console.log(reservation);
 
     if (!reservation) {
       return res.status(404).json({ message: "Reservation not found" });
     }
 
-    if( status != 'Booked'){
-      console.log('Inside if blocK');
+    if (status != 'Booked') {
       dineInCapacity += reservation.noOfPersons;
     }
-    
+
     restaurant.dineInCapacity = dineInCapacity;
     reservation.status = status;
 
     await restaurant.save();
     res.status(200).json({ message: "Reservation updated successfully" });
 
-  } catch(error){
-    console.error(error);
+  } catch (error) {
     res.status(500).json({ message: "Error updating reservation" });
   }
 };
 
+// Search Restaurants by Name
+exports.searchRestaurants = async (req, res) => {
+  try {
+    // Get the search query from the request
+    let { query } = req.query;
+    if (!query) {
+      query = '';
+    }
 
+    // Case-insensitive search for restaurantName
+    const restaurants = await User.find({
+      role: "RestaurantOwner", // Filter only restaurant owners
+      restaurantName: { $regex: query, $options: "i" }
+    }).select("_id restaurantName");
+
+    if (restaurants.length === 0) {
+      return res.status(404).json({ message: "No restaurants found" });
+    }
+
+    res.status(200).json({ restaurants });
+  } catch (error) {
+    res.status(500).json({ message: "Error searching restaurants", error: error.message });
+  }
+};
+
+// Search Menu Items in a Selected Restaurant
+exports.searchMenuItems = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    let { query } = req.query;
+    if (!query) {
+      query = '';
+    }
+
+    // Find the restaurant by ID
+    const restaurant = await User.findOne({ _id: restaurantId, role: "RestaurantOwner" });
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    // Filter menu items that match the search query
+    const matchedMenuItems = restaurant.menuItems.filter(item =>
+      item.name.toLowerCase().includes(query.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(query.toLowerCase()))
+    );
+
+    if (matchedMenuItems.length === 0) {
+      return res.status(404).json({ message: "No menu items found for this restaurant" });
+    }
+
+    res.status(200).json({ menuItems: matchedMenuItems });
+  } catch (error) {
+    res.status(500).json({ message: "Error searching menu items", error: error.message });
+  }
+};
 

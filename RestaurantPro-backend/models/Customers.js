@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require('./User');
 
 const CustomerSchema = new mongoose.Schema({
+    contactNumber: { type: String },
     address: {
         street: { type: String },
         city: { type: String },

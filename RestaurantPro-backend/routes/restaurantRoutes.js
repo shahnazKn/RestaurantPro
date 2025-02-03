@@ -13,7 +13,9 @@ const {
     editStaffMember,
     addReservationDetails,
     updateReservation,
-    getStaffMember } = require('../controllers/restaurantController');
+    getStaffMember,
+    searchRestaurants,
+    searchMenuItems } = require('../controllers/restaurantController');
 const { authenticateRestaurantOwner } = require('../middlewares/auth');
 
 const router = express.Router();
@@ -59,5 +61,11 @@ router.post("/reservation", authenticateRestaurantOwner, addReservationDetails);
 
 // Update reservation details
 router.put("/reservation/:reservationId", authenticateRestaurantOwner, updateReservation);
+
+// Search restaurants by name
+router.get('/search', searchRestaurants);
+
+// Search menu items within a selected restaurant
+router.get('/:restaurantId/menu/search', searchMenuItems);
 
 module.exports = router;

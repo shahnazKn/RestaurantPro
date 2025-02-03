@@ -38,6 +38,7 @@ const RestaurantOwnerSchema = new mongoose.Schema({
   contactNumber: { type: String, required: true },
   restaurantID: { type: String, unique: true, required: true },
   fssaiLicenceNumber: { type: String, required: true },
+  restaurantName: { type: String, required: true },
   isVerified: { type: Boolean, required: true },
   bankDetails: {
     accountNumber: { type: String, required: true },

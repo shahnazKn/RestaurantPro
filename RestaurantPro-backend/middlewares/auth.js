@@ -33,7 +33,6 @@ const authenticateRestaurantOwner = async (req, res, next) => {
 
         next(); // Proceed to the next middleware or controller
     } catch (error) {
-        console.error('Authentication error:', error);
         return res.status(500).json({ message: 'Authentication failed', error: error.message });
     }
 };
@@ -68,7 +67,6 @@ const authenticateCustomer = async (req, res, next) => {
 
         next(); // Proceed to the next middleware or controller
     } catch (error) {
-        console.error('Authentication error:', error);
         return res.status(500).json({ message: 'Authentication failed', error: error.message });
     }
 };
@@ -103,10 +101,13 @@ const authenticateAdmin = async (req, res, next) => {
 
         next(); // Proceed to the next middleware or controller
     } catch (error) {
-        console.error('Authentication error:', error);
         return res.status(500).json({ message: 'Authentication failed', error: error.message });
     }
 };
 
 
-module.exports = { authenticateRestaurantOwner, authenticateCustomer };
+module.exports = {
+    authenticateRestaurantOwner,
+    authenticateCustomer,
+    authenticateAdmin
+};

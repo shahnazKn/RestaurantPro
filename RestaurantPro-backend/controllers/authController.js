@@ -67,8 +67,7 @@ exports.customerSignup = async (req, res) => {
         );
         res.status(201).json({ message: 'Customer created', token });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Error creating customer' });
+        res.status(500).json({ message: 'Error creating customer', err });
     }
 };
 
@@ -77,6 +76,7 @@ exports.restaurantOwnerSignup = async (req, res) => {
     const { firstName,
         lastName,
         email,
+        restaurantName,
         contactNumber,
         restaurantID,
         fssaiLicenceNumber,
@@ -108,6 +108,7 @@ exports.restaurantOwnerSignup = async (req, res) => {
         lastName,
         email,
         password,
+        restaurantName,
         deliveryAvailable: false,
         takeAwayAvailable: false,
         dineInAvailable: false,
