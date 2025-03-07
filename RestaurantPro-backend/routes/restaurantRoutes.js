@@ -15,13 +15,17 @@ const {
     updateReservation,
     getStaffMember,
     searchRestaurants,
-    searchMenuItems } = require('../controllers/restaurantController');
+    searchMenuItems,
+    getRestaurantDetailsId } = require('../controllers/restaurantController');
 const { authenticateRestaurantOwner } = require('../middlewares/auth');
 
 const router = express.Router();
 
 //Get restaurant details
 router.get('/', authenticateRestaurantOwner, getRestaurantDetails);
+
+//Get restaurant details by id
+router.get('/search/:restaurantId', getRestaurantDetailsId);
 
 // Update restaurant details 
 router.put("/update", authenticateRestaurantOwner, updateRestaurantDetails);

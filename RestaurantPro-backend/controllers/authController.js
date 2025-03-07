@@ -25,6 +25,7 @@ exports.signin = async (req, res) => {
 
 // Customer signup
 exports.customerSignup = async (req, res) => {
+    console.log(req.body);
     const { firstName,
         lastName,
         email,
@@ -90,8 +91,8 @@ exports.restaurantOwnerSignup = async (req, res) => {
             city,
             state,
             zipCode,
+            country
         },
-        country
     } = req.body;
     let password = req.body.password,
         isVerified = false;
@@ -141,7 +142,7 @@ exports.restaurantOwnerSignup = async (req, res) => {
         res.status(201).json({ message: 'Restaurant profile created', token });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Error creating restaurant profile' });
+        res.status(500).json({ message: 'Error creating restaurant profile', err });
     }
 };
 

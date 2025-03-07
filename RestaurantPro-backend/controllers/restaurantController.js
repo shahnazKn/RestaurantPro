@@ -15,6 +15,20 @@ exports.getRestaurantDetails = async (req, res) => {
   }
 };
 
+// Get restaurant details by id
+exports.getRestaurantDetailsId = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const restaurant = await RestaurantOwner.findById(restaurantId);
+
+    if (!restaurant) return res.status(404).json({ message: "Restaurant details not found" });
+
+    return res.status(200).json({ restaurant: restaurant });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching restaurant details", error });
+  }
+};
+
 // Update restaurant owner details
 exports.updateRestaurantDetails = async (req, res) => {
   try {
@@ -359,9 +373,8 @@ exports.searchRestaurants = async (req, res) => {
 
     // Case-insensitive search for restaurantName
     const restaurants = await User.find({
-      role: "RestaurantOwner", // Filter only restaurant owners
-      restaurantName: { $regex: query, $options: "i" }
-    }).select("_id restaurantName");
+      role: "RestaurantOwner"
+    }).select("restaurantName");
 
     if (restaurants.length === 0) {
       return res.status(404).json({ message: "No restaurants found" });
