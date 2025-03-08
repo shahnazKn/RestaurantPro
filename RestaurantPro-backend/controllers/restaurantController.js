@@ -67,12 +67,12 @@ exports.updateRestaurantDetails = async (req, res) => {
 exports.addMenuItem = async (req, res) => {
   try {
     const { restaurantId } = req.user;
-    const { name, description, price, category, type } = req.body;
+    const { name, description, price, category, type, stock } = req.body;
 
     const restaurant = await RestaurantOwner.findById(restaurantId);
     if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
 
-    restaurant.menuItems.push({ name, description, price, category, type });
+    restaurant.menuItems.push({ name, description, price, category, type, stock });
     await restaurant.save();
 
     res.status(201).json({ message: 'Menu item added' });
@@ -86,7 +86,7 @@ exports.updateMenuItem = async (req, res) => {
   try {
     const { restaurantId } = req.user;
     const { menuId } = req.params;
-    const { name, description, price, category, type } = req.body;
+    const { name, description, price, category, type, stock } = req.body;
 
     const restaurant = await RestaurantOwner.findById(restaurantId);
     if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
@@ -99,6 +99,7 @@ exports.updateMenuItem = async (req, res) => {
     if (price) menuItem.price = price;
     if (category) menuItem.category = category;
     if (type) menuItem.type = type;
+    if (stock !== undefined) menuItem.stock = stock;
 
     await restaurant.save();
 
@@ -374,7 +375,7 @@ exports.searchRestaurants = async (req, res) => {
     // Case-insensitive search for restaurantName
     const restaurants = await User.find({
       role: "RestaurantOwner"
-    }).select("restaurantName");
+    });
 
     if (restaurants.length === 0) {
       return res.status(404).json({ message: "No restaurants found" });

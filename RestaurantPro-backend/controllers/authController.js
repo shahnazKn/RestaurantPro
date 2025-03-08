@@ -15,6 +15,10 @@ exports.signin = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+        if(user.role === "RestaurantOwner" && user.isVerified === false){
+            return res.status(400).json({ message: "Restaurant is not verified" });
+        }
+
         const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.json({ token, message: "Sign in successful", userRole: (user.toObject()).role });
     } catch (error) {
