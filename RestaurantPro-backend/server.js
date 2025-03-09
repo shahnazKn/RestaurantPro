@@ -5,11 +5,15 @@ const cors = require('cors');
 const customerRoutes = require('./routes/customerRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS configuration
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
 
 // Special handling for Stripe webhook route
 app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
@@ -19,6 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/payment', paymentRoutes);

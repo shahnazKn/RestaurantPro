@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 const Customer = require('../models/Customers');
 const RestaurantOwner = require('../models/RestaurantOwner');
+const User = require('../models/User');
 
-// Sign in
+// Sign in controller
 exports.signin = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -26,127 +26,125 @@ exports.signin = async (req, res) => {
     }
 };
 
-
-// Customer signup
+// Customer signup controller
 exports.customerSignup = async (req, res) => {
-    console.log(req.body);
-    const { firstName,
-        lastName,
-        email,
-        address: {
-            street,
-            city,
-            state,
-            postalCode,
-            country
-        }
-    } = req.body;
-    let password = req.body.password;
-    // Check if the customer already exists
-    const customerExists = await User.findOne({ email });
-    if (customerExists) {
-        return res.status(400).json({ message: 'Customer already exists' });
-    }
-    password = await bcrypt.hash(password, 10);
-    // Create a new customer
-    const customer = new Customer({
-        firstName,
-        lastName,
-        email,
-        password,
-        address: {
-            street,
-            city,
-            state,
-            postalCode,
-            country,
-        }
-    });
-
     try {
+        const { firstName, lastName, email, password, contactNumber, address } = req.body;
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already registered' });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new customer
+        const customer = new Customer({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            contactNumber,
+            address
+        });
+
         await customer.save();
+
+        // Create JWT token
         const token = jwt.sign(
-            { customerId: customer._id },
+            { 
+                userId: customer._id,
+                role: 'Customer',
+                customerId: customer._id
+            },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '24h' }
         );
-        res.status(201).json({ message: 'Customer created', token });
-    } catch (err) {
-        res.status(500).json({ message: 'Error creating customer', err });
+
+        res.status(201).json({
+            token,
+            user: {
+                id: customer._id,
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                email: customer.email,
+                role: 'Customer'
+            }
+        });
+    } catch (error) {
+        console.error('Customer signup error:', error);
+        res.status(500).json({ message: 'Error creating customer account' });
     }
 };
 
-// Reastaurant Owner signup
-exports.restaurantOwnerSignup = async (req, res) => {
-    const { firstName,
-        lastName,
-        email,
-        restaurantName,
-        contactNumber,
-        restaurantID,
-        fssaiLicenceNumber,
-        bankDetails: {
-            accountNumber,
-            ifscCode,
-            bankName,
-        },
-        address: {
-            street,
-            city,
-            state,
-            zipCode,
-            country
-        },
-    } = req.body;
-    let password = req.body.password,
-        isVerified = false;
-
-    // Check if the Restaurant already exists
-    const restaurantExists = await User.findOne({ email });
-    if (restaurantExists) {
-        return res.status(400).json({ message: 'Restaurant profile already exists' });
-    }
-    password = await bcrypt.hash(password, 10);
-    // Create a new Restaurant profile
-    const restaurant = new RestaurantOwner({
-        firstName,
-        lastName,
-        email,
-        password,
-        restaurantName,
-        deliveryAvailable: false,
-        takeAwayAvailable: false,
-        dineInAvailable: false,
-        dineInCapacity: 0,
-        contactNumber,
-        restaurantID,
-        fssaiLicenceNumber,
-        isVerified,
-        bankDetails: {
-            accountNumber,
-            ifscCode,
-            bankName,
-        },
-        address: {
-            street,
-            city,
-            state,
-            zipCode,
-            country
-        }
-    });
-
+// Restaurant signup controller
+exports.restaurantSignup = async (req, res) => {
     try {
-        await restaurant.save();
+        const {
+            firstName,
+            lastName,
+            email,
+            password,
+            restaurantName,
+            contactNumber,
+            restaurantID,
+            fssaiLicenceNumber,
+            bankDetails,
+            address
+        } = req.body;
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already registered' });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new restaurant owner
+        const restaurantOwner = new RestaurantOwner({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            restaurantName,
+            contactNumber,
+            restaurantID,
+            fssaiLicenceNumber,
+            isVerified: false,
+            bankDetails,
+            address
+        });
+
+        await restaurantOwner.save();
+
+        // Create JWT token
         const token = jwt.sign(
-            { restaurantId: restaurant._id },
+            { 
+                userId: restaurantOwner._id,
+                role: 'RestaurantOwner',
+                restaurantId: restaurantOwner._id
+            },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '24h' }
         );
-        res.status(201).json({ message: 'Restaurant profile created', token });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Error creating restaurant profile', err });
+
+        res.status(201).json({
+            token,
+            user: {
+                id: restaurantOwner._id,
+                firstName: restaurantOwner.firstName,
+                lastName: restaurantOwner.lastName,
+                email: restaurantOwner.email,
+                role: 'RestaurantOwner'
+            }
+        });
+    } catch (error) {
+        console.error('Restaurant signup error:', error);
+        res.status(500).json({ message: 'Error creating restaurant account' });
     }
 };
 

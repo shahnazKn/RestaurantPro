@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@stripe/stripe-js": "^5.10.0",
-    "prop-types": "^15.8.1",
-    "react-router-dom": "^7.1.5",
-    "stripe": "^17.7.0"
-  }
-}
