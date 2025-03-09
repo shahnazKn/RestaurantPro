@@ -57,7 +57,7 @@ function HomePage() {
                     </Col>
                     <Col lg={6} className="text-center mt-5 mt-lg-0">
                         <img 
-                            src="src/assets/HomePage.png" 
+                            src="/HomePage.png" 
                             alt="Food Delivery" 
                             className="img-fluid rounded shadow-lg"
                             style={{ maxWidth: '80%' }}

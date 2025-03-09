@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Form, Button, Alert } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
