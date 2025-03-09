@@ -11,7 +11,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://restaurant-pro-backend.vercel.app'],
+    origin: ['http://localhost:5173', 'https://restaurant-pro-gui.vercel.app'],
     credentials: true
 }));
 
