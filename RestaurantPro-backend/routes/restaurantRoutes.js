@@ -16,7 +16,8 @@ const {
     getStaffMember,
     searchRestaurants,
     searchMenuItems,
-    getRestaurantDetailsId } = require('../controllers/restaurantController');
+    getRestaurantDetailsId,
+    updateStaffAvailability } = require('../controllers/restaurantController');
 const { authenticateRestaurantOwner } = require('../middlewares/auth');
 
 const router = express.Router();
@@ -71,5 +72,8 @@ router.get('/search', searchRestaurants);
 
 // Search menu items within a selected restaurant
 router.get('/:restaurantId/menu/search', searchMenuItems);
+
+// Update staff availability
+router.put("/staff/:staffId/availability", authenticateRestaurantOwner, updateStaffAvailability);
 
 module.exports = router;

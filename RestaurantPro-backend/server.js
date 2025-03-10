@@ -6,6 +6,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const authRoutes = require('./routes/authRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 
@@ -27,6 +28,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/orders', orderRoutes);
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)

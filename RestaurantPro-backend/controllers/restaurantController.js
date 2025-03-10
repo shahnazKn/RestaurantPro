@@ -419,3 +419,32 @@ exports.searchMenuItems = async (req, res) => {
   }
 };
 
+// Update staff availability
+exports.updateStaffAvailability = async (req, res) => {
+  const { staffId } = req.params;
+  const { availability } = req.body;
+  const { restaurantId } = req.user;
+
+  try {
+    const restaurant = await RestaurantOwner.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
+
+    const staffMember = restaurant.deliveryStaff.find(staff => staff._id.toString() === staffId);
+    if (!staffMember) {
+      return res.status(404).json({ message: "Staff member not found" });
+    }
+
+    staffMember.availability = availability;
+    await restaurant.save();
+    
+    res.status(200).json({ 
+      message: "Staff availability updated successfully", 
+      staff: staffMember 
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating staff availability" });
+  }
+};
+

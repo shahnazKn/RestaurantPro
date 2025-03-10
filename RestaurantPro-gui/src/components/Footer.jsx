@@ -6,7 +6,7 @@ function Footer() {
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer style={{ backgroundColor: '#F7DCB9', borderTop: '2px solid #DEAC80' }} className="py-5 mt-5">
+        <footer style={{ backgroundColor: '#F7DCB9', borderTop: '2px solid #DEAC80' }} className="py-5">
             <Container>
                 <Row className="g-4">
                     <Col md={4}>

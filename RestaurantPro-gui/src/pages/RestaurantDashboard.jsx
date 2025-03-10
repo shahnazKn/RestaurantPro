@@ -52,6 +52,22 @@ function RestaurantDashboard() {
         dineInCapacity: 0
     });
 
+    // Add state for timing update alert
+    const [showTimingAlert, setShowTimingAlert] = useState(false);
+
+    // Add new state for orders management
+    const [showOrderActionModal, setShowOrderActionModal] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [orderAction, setOrderAction] = useState({
+        status: '',
+        reason: '',
+        deliveryStaffId: ''
+    });
+
+    // Add new state for orders
+    const [orders, setOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(true);
+
     // Add common food categories
     const foodCategories = [
         'Starters',
@@ -70,8 +86,12 @@ function RestaurantDashboard() {
         'Combos'
     ];
 
+    // Add state for available staff
+    const [availableStaff, setAvailableStaff] = useState([]);
+
     useEffect(() => {
         fetchRestaurantDetails();
+        fetchOrders();
     }, []);
 
     useEffect(() => {
@@ -112,6 +132,36 @@ function RestaurantDashboard() {
             setError(err.message || 'Failed to load restaurant details');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Add fetchOrders function
+    const fetchOrders = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/signin');
+                return;
+            }
+
+            const response = await fetch(`${backendUrl}/api/orders/restaurant-orders`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch orders');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                setOrders(data.orders);
+            }
+        } catch (err) {
+            setError(err.message || 'Failed to load orders');
+        } finally {
+            setOrdersLoading(false);
         }
     };
 
@@ -267,6 +317,8 @@ function RestaurantDashboard() {
             }
 
             await fetchRestaurantDetails();
+            setShowTimingAlert(true);
+            setTimeout(() => setShowTimingAlert(false), 3000); // Hide alert after 3 seconds
         } catch (err) {
             setError(err.message || 'Failed to update timings');
         }
@@ -337,17 +389,101 @@ function RestaurantDashboard() {
         }
     };
 
+    // Update handleOrderAction function
+    const handleOrderAction = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${backendUrl}/api/orders/update-status/${selectedOrder._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: orderAction.status.toLowerCase().replace(/ /g, '_'),
+                    reason: orderAction.reason,
+                    deliveryStaffId: orderAction.deliveryStaffId
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update order status');
+            }
+
+            const data = await response.json();
+            if (data.availableStaff) {
+                setAvailableStaff(data.availableStaff);
+            }
+
+            setShowOrderActionModal(false);
+            setSelectedOrder(null);
+            setOrderAction({ status: '', reason: '', deliveryStaffId: '' });
+            
+            // Refresh both orders and restaurant details
+            await Promise.all([
+                fetchOrders(),
+                fetchRestaurantDetails()
+            ]);
+            
+            // Show success message
+            alert('Order status updated successfully');
+        } catch (err) {
+            setError(err.message || 'Failed to update order status');
+        }
+    };
+
+    // Add function to get status badge color
+    const getOrderStatusBadgeColor = (status) => {
+        switch (status) {
+            case 'Pending':
+                return 'warning';
+            case 'Accepted':
+                return 'info';
+            case 'Preparing':
+                return 'primary';
+            case 'Out for Delivery':
+                return 'info';
+            case 'Delivered':
+                return 'success';
+            case 'Declined':
+            case 'Rejected':
+                return 'danger';
+            default:
+                return 'secondary';
+        }
+    };
+
+    // Add new handler for updating staff availability
+    const handleUpdateStaffAvailability = async (staffId, newAvailability) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${backendUrl}/api/restaurant/staff/${staffId}/availability`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ availability: newAvailability })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update staff availability');
+            }
+
+            await fetchRestaurantDetails();
+        } catch (err) {
+            setError(err.message || 'Failed to update staff availability');
+        }
+    };
+
     if (loading) {
         return <div>Loading...</div>;
     }
 
     return (
         <Container fluid className="py-4">
-            <Row className="mb-4">
-                <Col>
-                    <h2 style={{ color: '#914F1E' }}>Restaurant Dashboard</h2>
-                </Col>
-            </Row>
 
             {error && (
                 <Alert variant="danger" onClose={() => setError('')} dismissible>
@@ -598,6 +734,11 @@ function RestaurantDashboard() {
                     <Card>
                         <Card.Body>
                             <h4 className="mb-4">Operating Hours</h4>
+                            {showTimingAlert && (
+                                <Alert variant="success" className="mb-3">
+                                    Restaurant timings updated successfully!
+                                </Alert>
+                            )}
                             <Form onSubmit={handleUpdateTimings}>
                                 <Row>
                                     <Col md={6}>
@@ -652,7 +793,6 @@ function RestaurantDashboard() {
                                         <th>Name</th>
                                         <th>ID Proof Number</th>
                                         <th>Availability</th>
-                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -662,9 +802,13 @@ function RestaurantDashboard() {
                                             <td>{staff.name}</td>
                                             <td>{staff.idProofNumber}</td>
                                             <td>
-                                                <Badge bg={staff.availability ? 'success' : 'danger'}>
-                                                    {staff.availability ? 'Available' : 'Unavailable'}
-                                                </Badge>
+                                                <Form.Check
+                                                    type="switch"
+                                                    id={`availability-switch-${staff._id}`}
+                                                    checked={staff.availability}
+                                                    onChange={(e) => handleUpdateStaffAvailability(staff._id, e.target.checked)}
+                                                    label={staff.availability ? 'Available' : 'Unavailable'}
+                                                />
                                             </td>
                                             <td>
                                                 <Badge bg={staff.deliveryAssigned ? 'warning' : 'success'}>
@@ -722,6 +866,152 @@ function RestaurantDashboard() {
                                     ))}
                                 </tbody>
                             </Table>
+                        </Card.Body>
+                    </Card>
+                </Tab>
+
+                {/* Add Orders Tab */}
+                <Tab eventKey="orders" title="Orders Management">
+                    <Card>
+                        <Card.Body>
+                            <h4 className="mb-4">Orders</h4>
+                            {ordersLoading ? (
+                                <div className="text-center">
+                                    <span>Loading orders...</span>
+                                </div>
+                            ) : (
+                                <Table responsive hover>
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Items</th>
+                                            <th>Total Amount</th>
+                                            <th>Order Type</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {orders.map((order) => (
+                                            <tr key={order._id}>
+                                                <td>{order._id}</td>
+                                                <td>{order.user.email || 'N/A'}</td>
+                                                <td>
+                                                    <Button
+                                                        variant="link"
+                                                        onClick={() => {
+                                                            setSelectedOrder(order);
+                                                            setShowOrderActionModal(true);
+                                                        }}
+                                                    >
+                                                        View Items ({order.items.length})
+                                                    </Button>
+                                                </td>
+                                                <td>₹{order.totalAmount}</td>
+                                                <td>Delivery</td>
+                                                <td>
+                                                    <Badge bg={getOrderStatusBadgeColor(order.status)}>
+                                                        {order.status.replace(/_/g, ' ').toUpperCase()}
+                                                    </Badge>
+                                                </td>
+                                                <td>
+                                                    <div className="d-flex gap-2">
+                                                        {order.status === 'paid' && (
+                                                            <>
+                                                                <Button
+                                                                    variant="success"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedOrder(order);
+                                                                        setOrderAction({ status: 'preparing' });
+                                                                        setShowOrderActionModal(true);
+                                                                    }}
+                                                                >
+                                                                    Start Preparing
+                                                                </Button>
+                                                                <Button
+                                                                    variant="danger"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedOrder(order);
+                                                                        setOrderAction({ status: 'cancelled' });
+                                                                        setShowOrderActionModal(true);
+                                                                    }}
+                                                                >
+                                                                    Cancel
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                        {order.status === 'preparing' && (
+                                                            <>
+                                                                <Button
+                                                                    variant="info"
+                                                                    size="sm"
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const token = localStorage.getItem('token');
+                                                                            const response = await fetch(`${backendUrl}/api/restaurant`, {
+                                                                                headers: {
+                                                                                    'Authorization': `Bearer ${token}`
+                                                                                }
+                                                                            });
+
+                                                                            if (!response.ok) {
+                                                                                throw new Error('Failed to fetch available staff');
+                                                                            }
+
+                                                                            const data = await response.json();
+                                                                            if (data.restaurant?.deliveryStaff) {
+                                                                                const availableStaffList = data.restaurant.deliveryStaff.filter(
+                                                                                    staff => staff.availability && !staff.deliveryAssigned
+                                                                                );
+                                                                                setAvailableStaff(availableStaffList);
+                                                                            }
+
+                                                                            setSelectedOrder(order);
+                                                                            setOrderAction({ status: 'out_for_delivery' });
+                                                                            setShowOrderActionModal(true);
+                                                                        } catch (err) {
+                                                                            setError(err.message || 'Failed to fetch available staff');
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Out for Delivery
+                                                                </Button>
+                                                                <Button
+                                                                    variant="success"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedOrder(order);
+                                                                        setOrderAction({ status: 'delivered' });
+                                                                        setShowOrderActionModal(true);
+                                                                    }}
+                                                                >
+                                                                    Mark Delivered
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                        {order.status === 'out_for_delivery' && (
+                                                            <Button
+                                                                variant="success"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setSelectedOrder(order);
+                                                                    setOrderAction({ status: 'delivered' });
+                                                                    setShowOrderActionModal(true);
+                                                                }}
+                                                            >
+                                                                Mark Delivered
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            )}
                         </Card.Body>
                     </Card>
                 </Tab>
@@ -909,6 +1199,109 @@ function RestaurantDashboard() {
                             </Button>
                         </div>
                     </Form>
+                </Modal.Body>
+            </Modal>
+
+            {/* Update Order Action Modal */}
+            <Modal show={showOrderActionModal} onHide={() => {
+                setShowOrderActionModal(false);
+                setSelectedOrder(null);
+                setOrderAction({ status: '', reason: '', deliveryStaffId: '' });
+            }} centered>
+                <Modal.Header closeButton style={{ backgroundColor: '#F7DCB9', borderBottom: '2px solid #DEAC80' }}>
+                    <Modal.Title style={{ color: '#914F1E' }}>
+                        {orderAction.status ? `${orderAction.status.replace(/_/g, ' ').toUpperCase()} Order` : 'Order Details'}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body style={{ backgroundColor: '#F7DCB9' }}>
+                    {selectedOrder && (
+                        <>
+                            <div className="mb-4">
+                                <h6>Order Details:</h6>
+                                <Table borderless size="sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Customer:</strong></td>
+                                            <td>{selectedOrder.user.name}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Items:</strong></td>
+                                            <td>
+                                                {selectedOrder.items.map((item, index) => (
+                                                    <div key={index}>
+                                                        {item.name} x {item.quantity} - ₹{item.menuItem.price * item.quantity}
+                                                    </div>
+                                                ))}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Total Amount:</strong></td>
+                                            <td>₹{selectedOrder.totalAmount}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Delivery Address:</strong></td>
+                                            <td>{selectedOrder.deliveryAddress}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Phone:</strong></td>
+                                            <td>{selectedOrder.phoneNumber}</td>
+                                        </tr>
+                                    </tbody>
+                                </Table>
+                            </div>
+                            {orderAction.status && (
+                                <Form onSubmit={handleOrderAction}>
+                                    {orderAction.status === 'cancelled' && (
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Cancellation Reason</Form.Label>
+                                            <Form.Control
+                                                as="textarea"
+                                                rows={3}
+                                                value={orderAction.reason}
+                                                onChange={(e) => setOrderAction({
+                                                    ...orderAction,
+                                                    reason: e.target.value
+                                                })}
+                                                required
+                                            />
+                                        </Form.Group>
+                                    )}
+                                    {orderAction.status === 'out_for_delivery' && (
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Select Delivery Staff</Form.Label>
+                                            <Form.Select
+                                                value={orderAction.deliveryStaffId}
+                                                onChange={(e) => setOrderAction({
+                                                    ...orderAction,
+                                                    deliveryStaffId: e.target.value
+                                                })}
+                                                required
+                                            >
+                                                <option value="">Select Staff</option>
+                                                {availableStaff.map((staff) => (
+                                                    <option key={staff._id} value={staff._id}>
+                                                        {staff.name}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
+                                        </Form.Group>
+                                    )}
+                                    <div className="d-flex justify-content-end gap-2">
+                                        <Button variant="secondary" onClick={() => {
+                                            setShowOrderActionModal(false);
+                                            setSelectedOrder(null);
+                                            setOrderAction({ status: '', reason: '', deliveryStaffId: '' });
+                                        }}>
+                                            Cancel
+                                        </Button>
+                                        <Button type="submit" style={{ backgroundColor: '#914F1E', borderColor: '#914F1E' }}>
+                                            Confirm
+                                        </Button>
+                                    </div>
+                                </Form>
+                            )}
+                        </>
+                    )}
                 </Modal.Body>
             </Modal>
         </Container>
