@@ -35,6 +35,33 @@ function CustomerSignup() {
         setError("");
     };
 
+    const handleEmailValidation =  async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        try {
+            const {email} = formData;
+            const response = await fetch(`https://emailvalidation.abstractapi.com/v1/?api_key=4f16243cd77e41fdb5590c3b888ddb6a&email=${email}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            const data = await response.json();
+            const isValidEmail = data.is_smtp_valid.text;
+
+            if (isValidEmail === "TRUE") {
+                handleSubmit(e);
+            } else {
+                throw new Error(data.message || 'Not a valid email');
+            }
+
+        } catch (err) {
+            setError(err.message || 'Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -46,7 +73,7 @@ function CustomerSignup() {
                 address: address
             };
 
-            const response = await fetch(`${backendUrl}/api/auth/customer/signup`, {
+            const response = await fetch(`${backendUrl}/api/auth/signup/customer`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(dataToSubmit)
@@ -81,7 +108,7 @@ function CustomerSignup() {
                             </Alert>
                         )}
 
-                        <Form onSubmit={handleSubmit}>
+                        <Form onSubmit={handleEmailValidation}>
                             <Row>
                                 <Col md={6}>
                                     <Form.Group className="mb-3">
