@@ -131,7 +131,7 @@ function OrderTracking() {
 
                     <div className="d-flex justify-content-between">
                         <h5>Total Amount:</h5>
-                        <h5>₹{order?.totalAmount}</h5>
+                        <h5>₹{order?.totalAmount / 100}</h5>
                     </div>
                 </Card.Body>
             </Card>

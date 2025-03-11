@@ -101,7 +101,7 @@ function Checkout() {
 
             // Convert amount to paisa and prepare order data
             const orderData = {
-                amount: Math.round(orderDetails.totalAmount * 100), // Convert to paisa
+                amount: orderDetails.totalAmount, // Convert to paisa
                 items: orderDetails.items.map(item => {
                     console.log('Processing item:', item);
                     return {

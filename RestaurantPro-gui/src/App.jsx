@@ -12,6 +12,8 @@ import RestaurantMenu from "./pages/RestaurantMenu";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import OrderHistory from "./pages/OrderHistory";
+import OrderTracking from "./pages/OrderTracking";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
@@ -60,6 +62,22 @@ function App() {
                             element={
                                 <ProtectedRoute allowedRole="Customer">
                                     <CustomerHome />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/customer/orders" 
+                            element={
+                                <ProtectedRoute allowedRole="Customer">
+                                    <OrderHistory />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/order-tracking/:orderId" 
+                            element={
+                                <ProtectedRoute allowedRole="Customer">
+                                    <OrderTracking />
                                 </ProtectedRoute>
                             } 
                         />

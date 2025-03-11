@@ -2,10 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const customerRoutes = require('./routes/customerRoutes');
-const restaurantRoutes = require('./routes/restaurantRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
+const { scheduleCleanupJobs } = require('./utils/cronJobs');
+
+// Import routes
 const authRoutes = require('./routes/authRoutes');
+const restaurantRoutes = require('./routes/restaurantRoutes');
+const customerRoutes = require('./routes/customerRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
@@ -25,11 +28,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/customer', customerRoutes);
 app.use('/api/restaurant', restaurantRoutes);
+app.use('/api/customer', customerRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/orders', orderRoutes);
 
+// Initialize cron jobs
+scheduleCleanupJobs();
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)

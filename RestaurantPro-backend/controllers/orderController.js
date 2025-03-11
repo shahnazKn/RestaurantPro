@@ -179,8 +179,34 @@ const getOrderDetails = async (req, res) => {
     }
 };
 
+// Add this new controller function
+const getMyOrders = async (req, res) => {
+    try {
+        console.log("getMyOrders");
+        const o = await Order.find({ user: req.user.customerId });
+        console.log("customerId", req.user.customerId);
+        console.log("getMyOrders", o);
+        const orders = await Order.find({ user: req.user.customerId })
+            .populate('restaurant', 'restaurantName')
+            .populate('items', 'name price')
+            .sort({ orderDate: -1 }); // Sort by date, newest first
+
+        res.json({
+            success: true,
+            orders
+        });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching orders'
+        });
+    }
+};
+
 module.exports = {
     getRestaurantOrders,
     updateOrderStatus,
-    getOrderDetails
+    getOrderDetails,
+    getMyOrders
 };

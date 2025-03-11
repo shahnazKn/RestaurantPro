@@ -413,6 +413,8 @@ function RestaurantDashboard() {
             }
 
             const data = await response.json();
+            
+            // Update available staff list if preparing status
             if (data.availableStaff) {
                 setAvailableStaff(data.availableStaff);
             }
@@ -421,14 +423,20 @@ function RestaurantDashboard() {
             setSelectedOrder(null);
             setOrderAction({ status: '', reason: '', deliveryStaffId: '' });
             
-            // Refresh both orders and restaurant details
+            // Refresh both orders and restaurant details to update staff status
             await Promise.all([
                 fetchOrders(),
                 fetchRestaurantDetails()
             ]);
             
-            // Show success message
-            alert('Order status updated successfully');
+            // Show success message with specific text based on status
+            const statusMessages = {
+                'preparing': 'Order is now being prepared',
+                'out_for_delivery': 'Order is out for delivery',
+                'delivered': 'Order has been marked as delivered',
+                'cancelled': 'Order has been cancelled'
+            };
+            alert(statusMessages[orderAction.status.toLowerCase().replace(/ /g, '_')] || 'Order status updated successfully');
         } catch (err) {
             setError(err.message || 'Failed to update order status');
         }
@@ -802,13 +810,23 @@ function RestaurantDashboard() {
                                             <td>{staff.name}</td>
                                             <td>{staff.idProofNumber}</td>
                                             <td>
-                                                <Form.Check
-                                                    type="switch"
-                                                    id={`availability-switch-${staff._id}`}
-                                                    checked={staff.availability}
-                                                    onChange={(e) => handleUpdateStaffAvailability(staff._id, e.target.checked)}
-                                                    label={staff.availability ? 'Available' : 'Unavailable'}
-                                                />
+                                                <div className="d-flex align-items-center" 
+                                                    title={staff.deliveryAssigned ? "Staff member is currently assigned to a delivery" : ""}>
+                                                    <Form.Check
+                                                        type="switch"
+                                                        id={`availability-switch-${staff._id}`}
+                                                        checked={staff.availability}
+                                                        onChange={(e) => handleUpdateStaffAvailability(staff._id, e.target.checked)}
+                                                        disabled={staff.deliveryAssigned}
+                                                        label={staff.availability ? 'Available' : 'Unavailable'}
+                                                        style={{ cursor: staff.deliveryAssigned ? 'not-allowed' : 'pointer' }}
+                                                    />
+                                                    {staff.deliveryAssigned && (
+                                                        <span className="ms-2 text-muted" style={{ fontSize: '0.8rem' }}>
+                                                            (On Delivery)
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td>
                                                 <Badge bg={staff.deliveryAssigned ? 'warning' : 'success'}>
@@ -820,6 +838,8 @@ function RestaurantDashboard() {
                                                     variant="outline-danger"
                                                     size="sm"
                                                     onClick={() => handleDeleteStaff(staff._id)}
+                                                    disabled={staff.deliveryAssigned}
+                                                    title={staff.deliveryAssigned ? "Cannot remove staff member while on delivery" : ""}
                                                 >
                                                     Remove
                                                 </Button>
@@ -889,6 +909,8 @@ function RestaurantDashboard() {
                                             <th>Total Amount</th>
                                             <th>Order Type</th>
                                             <th>Status</th>
+                                            <th>Order Date</th>
+                                            <th>Last Updated</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -908,12 +930,30 @@ function RestaurantDashboard() {
                                                         View Items ({order.items.length})
                                                     </Button>
                                                 </td>
-                                                <td>₹{order.totalAmount}</td>
+                                                <td>₹{order.totalAmount / 100}</td>
                                                 <td>Delivery</td>
                                                 <td>
                                                     <Badge bg={getOrderStatusBadgeColor(order.status)}>
                                                         {order.status.replace(/_/g, ' ').toUpperCase()}
                                                     </Badge>
+                                                </td>
+                                                <td>
+                                                    {new Date(order.orderDate).toLocaleString('en-IN', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </td>
+                                                <td>
+                                                    {new Date(order.updatedAt).toLocaleString('en-IN', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
                                                 </td>
                                                 <td>
                                                     <div className="d-flex gap-2">
@@ -1236,7 +1276,7 @@ function RestaurantDashboard() {
                                         </tr>
                                         <tr>
                                             <td><strong>Total Amount:</strong></td>
-                                            <td>₹{selectedOrder.totalAmount}</td>
+                                            <td>₹{selectedOrder.totalAmount / 100}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>Delivery Address:</strong></td>

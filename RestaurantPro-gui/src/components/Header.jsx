@@ -60,6 +60,15 @@ function Header() {
                     <Nav className="ms-auto align-items-center">
                         {isAuthenticated ? (
                             <>
+                                {userRole === 'Customer' && (
+                                    <Nav.Link 
+                                        onClick={() => navigate('/customer/orders')}
+                                        style={{ color: '#914F1E' }}
+                                        className={location.pathname === '/customer/orders' ? 'active mx-2' : 'mx-2'}
+                                    >
+                                        My Orders
+                                    </Nav.Link>
+                                )}
                                 <Button
                                     variant="outline-primary"
                                     onClick={handleLogout}

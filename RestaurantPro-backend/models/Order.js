@@ -63,10 +63,25 @@ const orderSchema = new mongoose.Schema({
     },
     orderDate: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        index: true
     }
 }, {
     timestamps: true
 });
+
+// Add static method to clean up old pending orders
+orderSchema.statics.cleanupPendingOrders = async function() {
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 hours ago
+    try {
+        const result = await this.deleteMany({
+            status: 'pending',
+            orderDate: { $lt: twoHoursAgo }
+        });
+        console.log(`Cleaned up ${result.deletedCount} pending orders older than 2 hours`);
+    } catch (error) {
+        console.error('Error cleaning up pending orders:', error);
+    }
+};
 
 module.exports = mongoose.model('Order', orderSchema);
