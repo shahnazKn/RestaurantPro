@@ -11,7 +11,7 @@ async function seedAdmin() {
             .catch((err) => console.error('Database connection error:', err));
 
         // Check if an admin user already exists
-        const existingAdmin = await Admin.findOne({ email: 'admin@example.com' });
+        const existingAdmin = await Admin.findOne({ email: 'restaurantproad@gmail.com' });
         if (existingAdmin) {
             console.log('Admin user already exists!');
             return;
@@ -21,9 +21,9 @@ async function seedAdmin() {
         // Password saved in .env file for security
         const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
         const admin = new Admin({
-            firstName: 'System',
-            lastName: 'Admin',
-            email: 'admin@example.com',
+            firstName: 'Restaurant Pro',
+            lastName: 'System Admin',
+            email: 'restaurantproad@gmail.com',
             password: hashedPassword
         });
 

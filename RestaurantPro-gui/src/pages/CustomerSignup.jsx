@@ -35,12 +35,12 @@ function CustomerSignup() {
         setError("");
     };
 
-    const handleEmailValidation =  async (e) => {
+    const handleEmailValidation = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError("");
         try {
-            const {email} = formData;
+            const { email } = formData;
             const response = await fetch(`https://emailvalidation.abstractapi.com/v1/?api_key=4f16243cd77e41fdb5590c3b888ddb6a&email=${email}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" }
@@ -73,6 +73,12 @@ function CustomerSignup() {
                 address: address
             };
 
+            const ernakulamPostalRegex = /^682\d{3}$/;
+            if (!ernakulamPostalRegex.test(dataToSubmit.address.postalCode)) {
+                setError("Invalid postal code for Ernakulam, Kerala.");
+                return;
+            }
+
             const response = await fetch(`${backendUrl}/api/auth/signup/customer`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -101,7 +107,7 @@ function CustomerSignup() {
                 <Col xs={12} sm={10} md={8} lg={6}>
                     <div className="bg-white p-4 rounded shadow" style={{ border: '2px solid #914F1E' }}>
                         <h2 className="text-center mb-4" style={{ color: '#914F1E' }}>Customer Registration</h2>
-                        
+
                         {error && (
                             <Alert variant="danger" className="mb-3">
                                 {error}
@@ -179,25 +185,28 @@ function CustomerSignup() {
                                 <Col md={6}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>City</Form.Label>
-                                        <Form.Control
-                                            type="text"
+                                        <Form.Select
                                             name="city"
                                             value={address.city}
                                             onChange={handleChange}
                                             required
-                                        />
+                                        >
+                                            <option value="">Select a city</option>
+                                            <option value="Ernakulam">Ernakulam</option>
+                                        </Form.Select>
                                     </Form.Group>
                                 </Col>
                                 <Col md={6}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>State</Form.Label>
-                                        <Form.Control
-                                            type="text"
+                                        <Form.Select
                                             name="state"
                                             value={address.state}
                                             onChange={handleChange}
                                             required
-                                        />
+                                        >
+                                            <option value="Kerala">Kerala</option>
+                                        </Form.Select>
                                     </Form.Group>
                                 </Col>
                             </Row>
@@ -218,23 +227,24 @@ function CustomerSignup() {
                                 <Col md={6}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Country</Form.Label>
-                                        <Form.Control
-                                            type="text"
+                                        <Form.Select
                                             name="country"
                                             value={address.country}
                                             onChange={handleChange}
                                             required
-                                        />
+                                        >
+                                            <option value="India">India</option>
+                                        </Form.Select>
                                     </Form.Group>
                                 </Col>
                             </Row>
 
-                            <Button 
-                                variant="primary" 
-                                type="submit" 
+                            <Button
+                                variant="primary"
+                                type="submit"
                                 className="w-100 mt-3"
                                 disabled={loading}
-                                style={{ 
+                                style={{
                                     backgroundColor: '#914F1E',
                                     borderColor: '#914F1E'
                                 }}
@@ -260,8 +270,8 @@ function CustomerSignup() {
                         <div className="text-center mt-3">
                             <p className="mb-0">
                                 Already have an account?{" "}
-                                <Button 
-                                    variant="link" 
+                                <Button
+                                    variant="link"
                                     onClick={() => navigate('/signin')}
                                     style={{ color: '#914F1E', textDecoration: 'none' }}
                                 >
