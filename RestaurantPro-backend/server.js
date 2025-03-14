@@ -10,6 +10,7 @@ const restaurantRoutes = require('./routes/restaurantRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Initialize cron jobs
 scheduleCleanupJobs();

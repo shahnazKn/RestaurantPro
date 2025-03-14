@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Container, Row, Col, Table, Button, Badge, Tabs, Tab, Spinner, Alert, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import emailjs from 'emailjs-com';
 import PropTypes from 'prop-types';
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -57,6 +58,23 @@ function AdminDashboard() {
 
             if (!response.ok) {
                 throw new Error('Failed to verify restaurant');
+            } else {
+                    const templateParams = {
+                      to_email: restaurants[0].email, 
+                      from_name: "Restaurant Pro",
+                      name: restaurants[0].firstName
+                    };
+                  
+                    emailjs.send(
+                      "service_pdz9l6r", 
+                      "template_75gubyl", 
+                      templateParams, 
+                      "ELMjEPk-rsMIPNRJT"
+                    ).then(response => {
+                      console.log("Email sent successfully!", response);
+                    }).catch(error => {
+                      console.error("Error sending email:", error);
+                    });
             }
 
             await fetchRestaurants();
